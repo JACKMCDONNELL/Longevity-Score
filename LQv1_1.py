@@ -117,43 +117,88 @@ mode = st.sidebar.radio("Mode", ["Single patient","Bulk CSV"], index=0)
 if mode == "Single patient":
     st.subheader("Inputs")
 
-    with st.form("lq_form", clear_on_submit=False):
-        # Prefill buttons
-        col0a, col0b = st.columns(2)
-        if col0a.form_submit_button("Prefill: Typical", use_container_width=True):
-            st.session_state.pref = prefill("typical")
-        if col0b.form_submit_button("Prefill: High Performer", use_container_width=True):
-            st.session_state.pref = prefill("high")
+    # Prefills
+    cpa, cpb = st.columns(2)
+    if cpa.button("Prefill: Typical"):
+        st.session_state.pref = prefill("typical")
+    if cpb.button("Prefill: High Performer"):
+        st.session_state.pref = prefill("high")
+    defaults = st.session_state.get("pref", prefill("typical"))
 
-        defaults = st.session_state.get("pref", prefill("typical"))
+    use_oura = st.checkbox("Compute MVPA from Oura High/Medium", value=False)
+    use_rem  = st.checkbox("Compute REM% from minutes + TST", value=False)
 
-        use_oura = st.checkbox("Compute MVPA from Oura High/Medium", value=False)
-        use_rem  = st.checkbox("Compute REM% from minutes + TST", value=False)
+    colA, colB, colC, colD = st.columns(4)
 
-        colA, colB, colC, colD = st.columns(4)
+    # MVPA helper
+    if use_oura:
+        oh = st.number_input("Oura High (min/wk)", min_value=0.0, value=100.0, step=1.0, key="oh")
+        om = st.number_input("Oura Medium (min/wk)", min_value=0.0, value=100.0, step=1.0, key="om")
+        mvpa_val = min(1000.0, oh + 0.5*om)
+        st.info(f"Computed MVPA = {mvpa_val:.1f}")
+    else:
+        mvpa_val = st.number_input(HELP["mvpa"], min_value=0.0, value=float(defaults["mvpa"]), step=1.0, key="mvpa")
 
-        # MVPA helper
-        if use_oura:
-            oh = st.number_input("Oura High (min/wk)", min_value=0.0, value=100.0, step=1.0, key="oh")
-            om = st.number_input("Oura Medium (min/wk)", min_value=0.0, value=100.0, step=1.0, key="om")
-            mvpa_val = min(1000.0, oh + 0.5*om)
-            st.info(f"Computed MVPA = {mvpa_val:.1f}")
-        else:
-            mvpa_val = st.number_input(HELP["mvpa"], min_value=0.0, value=float(defaults["mvpa"]), step=1.0, key="mvpa")
+    # REM helper
+    if use_rem:
+        rem_m = st.number_input("REM minutes", min_value=0.0, value=52.0, step=1.0, key="rem_m")
+        tst_m = st.number_input("Total Sleep Time (minutes)", min_value=1.0, value=420.0, step=1.0, key="tst_m")
+        rem_pct_val = 100.0 * rem_m / tst_m
+        st.info(f"Computed REM% = {rem_pct_val:.1f}%")
+    else:
+        rem_pct_val = st.number_input(HELP["rem_pct"], min_value=0.0, max_value=100.0,
+                                      value=float(defaults["rem_pct"]), step=0.1, key="rem_pct")
 
-        # REM helper
-        if use_rem:
-            rem_m = st.number_input("REM minutes", min_value=0.0, value=52.0, step=1.0, key="rem_m")
-            tst_m = st.number_input("Total Sleep Time (minutes)", min_value=1.0, value=420.0, step=1.0, key="tst_m")
-            rem_pct_val = 100.0*rem_m/tst_m
-            st.info(f"Computed REM% = {rem_pct_val:.1f}%")
-        else:
-            rem_pct_val = st.number_input(HELP["rem_pct"], min_value=0.0, max_value=100.0,
-                                          value=float(defaults["rem_pct"]), step=0.1, key="rem_pct")
+    with colA:
+        ogtt_2h = st.number_input(HELP["ogtt_2h"], min_value=0.0, value=float(defaults["ogtt_2h"]), step=1.0, key="ogtt_2h")
+        apob    = st.number_input(HELP["apob"],    min_value=0.0, value=float(defaults["apob"]),    step=1.0, key="apob")
+        vo2max  = st.number_input(HELP["vo2max"],  min_value=0.0, value=float(defaults["vo2max"]),  step=0.1, key="vo2max")
+        crp     = st.number_input(HELP["crp"],     min_value=0.0, value=float(defaults["crp"]),     step=0.1, key="crp")
+        bmi     = st.number_input(HELP["bmi"],     min_value=0.0, value=float(defaults["bmi"]),     step=0.1, key="bmi")
 
-        # Inputs
-        with colA:
-            ogtt_2h = st.number_input(HELP["ogtt_2h"], min_value=0.0, value=float(defaults["ogtt_2h"]), step=1.0, key="ogtt_2h")
-            apob    = st.number_input(HELP["apob"],    min_value=0.0, value=float(defaults["apob"]),    step=1.0, key="apob")
-            vo2max  = st.number_input(HELP["vo2max"],  min_value=0.0, value=float(defaults["vo2max"]),  step=0.1, key="vo2max")
-            crp     = st.number_input(HEL_
+    with colB:
+        packyrs = st.number_input(HELP["packyrs"], min_value=0.0, value=float(defaults["packyrs"]), step=0.1, key="packyrs")
+        moca    = st.number_input(HELP["moca"],    min_value=0.0, max_value=30.0, value=float(defaults["moca"]), step=0.5, key="moca")
+        cac     = st.number_input(HELP["cac"],     min_value=0.0, value=float(defaults["cac"]),     step=1.0, key="cac")
+        hrv     = st.number_input(HELP["hrv"],     min_value=0.0, value=float(defaults["hrv"]),     step=1.0, key="hrv")
+        phq9    = st.number_input(HELP["phq9"],    min_value=0.0, max_value=27.0, value=float(defaults["phq9"]), step=1.0, key="phq9")
+
+    with colC:
+        alt     = st.number_input(HELP["alt"],     min_value=0.0, value=float(defaults["alt"]),     step=1.0, key="alt")
+        egfr    = st.number_input(HELP["egfr"],    min_value=0.0, value=float(defaults["egfr"]),    step=1.0, key="egfr")
+        bmd_t   = st.number_input(HELP["bmd_t"],                         value=float(defaults["bmd_t"]),   step=0.1, key="bmd_t")
+        truage_delta = st.number_input(HELP["truage_delta"],             value=float(defaults["truage_delta"]), step=0.1, key="truage_delta")
+        small_hdl    = st.number_input(HELP["small_hdl"], min_value=0.0, value=float(defaults["small_hdl"]),  step=0.1, key="small_hdl")
+
+    with colD:
+        grip  = st.number_input(HELP["grip"],  min_value=0.0, value=float(defaults["grip"]),  step=0.1, key="grip")
+        swls  = st.number_input(HELP["swls"],  min_value=0.0, max_value=35.0, value=float(defaults["swls"]), step=1.0, key="swls")
+        rpdqs = st.number_input(HELP["rpdqs"], min_value=0.0, max_value=52.0, value=float(defaults["rpdqs"]), step=1.0, key="rpdqs")
+
+    st.divider()
+    compute = st.button("Compute LQ", type="primary")
+
+    if compute:
+        raw = dict(
+            ogtt_2h=ogtt_2h, apob=apob, vo2max=vo2max, crp=crp, bmi=bmi,
+            packyrs=packyrs, moca=moca, mvpa=mvpa_val, cac=cac, hrv=hrv,
+            phq9=phq9, alt=alt, egfr=egfr, bmd_t=bmd_t, truage_delta=truage_delta,
+            small_hdl=small_hdl, rem_pct=rem_pct_val, grip=grip, swls=swls, rpdqs=rpdqs
+        )
+        res = compute_single(raw, cac_method=cac_method)
+        c1, c2 = st.columns(2)
+        c1.metric("Composite (0–100)", f"{res['composite']:.2f}")
+        c2.metric("LQ (300–850)", f"{res['LQ']:.1f}")
+
+        norm_items = {k.replace("N_",""): v for k, v in res.items() if k.startswith("N_")}
+        df = pd.DataFrame({
+            "Variable": list(norm_items.keys()),
+            "Normalized (0–100)": [norm_items[k] for k in norm_items.keys()],
+            "Description": [HELP.get(k,"") for k in norm_items.keys()]
+        })
+        st.dataframe(df, use_container_width=True)
+
+        out_df = pd.DataFrame([{**raw, **res}])
+        st.download_button("Download results (CSV)",
+                           out_df.to_csv(index=False).encode("utf-8"),
+                           file_name="lq_single_result.csv", mime="text/csv")
