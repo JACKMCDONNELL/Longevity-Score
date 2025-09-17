@@ -166,6 +166,8 @@ if mode == "Single patient":
         bmd_t   = st.number_input(HELP["bmd_t"],                      value=float(defaults["bmd_t"]),   step=0.1)
         truage_delta = st.number_input(HELP["truage_delta"],          value=float(defaults["truage_delta"]), step=0.1)
         small_hdl    = st.number_input(HELP["small_hdl"], min_value=0.0, value=float(defaults["small_hdl"]),  step=0.1)
-    with colD:
-        grip    = st.number_input(HELP["grip"],    min_value=0.0, value=float(defaults["grip"]),    step=0.1)
-        swls    = st.number_input(HELP["swl]()_
+with colD:
+    grip  = st.number_input(HELP["grip"],  min_value=0.0, value=float(defaults["grip"]),  step=0.1)
+    swls  = st.number_input(HELP["swls"],  min_value=0.0, max_value=35.0, value=float(defaults["swls"]), step=1.0)
+    rpdqs = st.number_input(HELP["rpdqs"], min_value=0.0, max_value=52.0, value=float(defaults["rpdqs"]), step=1.0)
+
