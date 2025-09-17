@@ -117,57 +117,43 @@ mode = st.sidebar.radio("Mode", ["Single patient","Bulk CSV"], index=0)
 if mode == "Single patient":
     st.subheader("Inputs")
 
-    col0a, col0b = st.columns(2)
-    if col0a.button("Prefill: Typical"):
-        st.session_state.pref = prefill("typical")
-    if col0b.button("Prefill: High Performer"):
-        st.session_state.pref = prefill("high")
-    defaults = st.session_state.get("pref", prefill("typical"))
+    with st.form("lq_form", clear_on_submit=False):
+        # Prefill buttons
+        col0a, col0b = st.columns(2)
+        if col0a.form_submit_button("Prefill: Typical", use_container_width=True):
+            st.session_state.pref = prefill("typical")
+        if col0b.form_submit_button("Prefill: High Performer", use_container_width=True):
+            st.session_state.pref = prefill("high")
 
-    use_oura = st.checkbox("Compute MVPA from Oura High/Medium", value=False)
-    use_rem  = st.checkbox("Compute REM% from minutes + TST", value=False)
+        defaults = st.session_state.get("pref", prefill("typical"))
 
-    colA, colB, colC, colD = st.columns(4)
+        use_oura = st.checkbox("Compute MVPA from Oura High/Medium", value=False)
+        use_rem  = st.checkbox("Compute REM% from minutes + TST", value=False)
 
-    # MVPA
-    if use_oura:
-        oh = st.number_input("Oura High (min/wk)", min_value=0.0, value=100.0, step=1.0)
-        om = st.number_input("Oura Medium (min/wk)", min_value=0.0, value=100.0, step=1.0)
-        mvpa_val = min(1000.0, oh + 0.5*om)
-        st.info(f"Computed MVPA = {mvpa_val:.1f}")
-    else:
-        mvpa_val = st.number_input(HELP["mvpa"], min_value=0.0, value=float(defaults["mvpa"]), step=1.0)
+        colA, colB, colC, colD = st.columns(4)
 
-    # REM%
-    if use_rem:
-        rem_m = st.number_input("REM minutes", min_value=0.0, value=52.0, step=1.0)
-        tst_m = st.number_input("Total Sleep Time (minutes)", min_value=1.0, value=420.0, step=1.0)
-        rem_pct_val = 100.0*rem_m/tst_m
-        st.info(f"Computed REM% = {rem_pct_val:.1f}%")
-    else:
-        rem_pct_val = st.number_input(HELP["rem_pct"], min_value=0.0, max_value=100.0,
-                                      value=float(defaults["rem_pct"]), step=0.1)
+        # MVPA helper
+        if use_oura:
+            oh = st.number_input("Oura High (min/wk)", min_value=0.0, value=100.0, step=1.0, key="oh")
+            om = st.number_input("Oura Medium (min/wk)", min_value=0.0, value=100.0, step=1.0, key="om")
+            mvpa_val = min(1000.0, oh + 0.5*om)
+            st.info(f"Computed MVPA = {mvpa_val:.1f}")
+        else:
+            mvpa_val = st.number_input(HELP["mvpa"], min_value=0.0, value=float(defaults["mvpa"]), step=1.0, key="mvpa")
 
-    with colA:
-        ogtt_2h = st.number_input(HELP["ogtt_2h"], min_value=0.0, value=float(defaults["ogtt_2h"]), step=1.0)
-        apob    = st.number_input(HELP["apob"],    min_value=0.0, value=float(defaults["apob"]),    step=1.0)
-        vo2max  = st.number_input(HELP["vo2max"],  min_value=0.0, value=float(defaults["vo2max"]),  step=0.1)
-        crp     = st.number_input(HELP["crp"],     min_value=0.0, value=float(defaults["crp"]),     step=0.1)
-        bmi     = st.number_input(HELP["bmi"],     min_value=0.0, value=float(defaults["bmi"]),     step=0.1)
-    with colB:
-        packyrs = st.number_input(HELP["packyrs"], min_value=0.0, value=float(defaults["packyrs"]), step=0.1)
-        moca    = st.number_input(HELP["moca"],    min_value=0.0, max_value=30.0, value=float(defaults["moca"]), step=0.5)
-        cac     = st.number_input(HELP["cac"],     min_value=0.0, value=float(defaults["cac"]),     step=1.0)
-        hrv     = st.number_input(HELP["hrv"],     min_value=0.0, value=float(defaults["hrv"]),     step=1.0)
-        phq9    = st.number_input(HELP["phq9"],    min_value=0.0, max_value=27.0, value=float(defaults["phq9"]), step=1.0)
-    with colC:
-        alt     = st.number_input(HELP["alt"],     min_value=0.0, value=float(defaults["alt"]),     step=1.0)
-        egfr    = st.number_input(HELP["egfr"],    min_value=0.0, value=float(defaults["egfr"]),    step=1.0)
-        bmd_t   = st.number_input(HELP["bmd_t"],                      value=float(defaults["bmd_t"]),   step=0.1)
-        truage_delta = st.number_input(HELP["truage_delta"],          value=float(defaults["truage_delta"]), step=0.1)
-        small_hdl    = st.number_input(HELP["small_hdl"], min_value=0.0, value=float(defaults["small_hdl"]),  step=0.1)
-with colD:
-    grip  = st.number_input(HELP["grip"],  min_value=0.0, value=float(defaults["grip"]),  step=0.1)
-    swls  = st.number_input(HELP["swls"],  min_value=0.0, max_value=35.0, value=float(defaults["swls"]), step=1.0)
-    rpdqs = st.number_input(HELP["rpdqs"], min_value=0.0, max_value=52.0, value=float(defaults["rpdqs"]), step=1.0)
+        # REM helper
+        if use_rem:
+            rem_m = st.number_input("REM minutes", min_value=0.0, value=52.0, step=1.0, key="rem_m")
+            tst_m = st.number_input("Total Sleep Time (minutes)", min_value=1.0, value=420.0, step=1.0, key="tst_m")
+            rem_pct_val = 100.0*rem_m/tst_m
+            st.info(f"Computed REM% = {rem_pct_val:.1f}%")
+        else:
+            rem_pct_val = st.number_input(HELP["rem_pct"], min_value=0.0, max_value=100.0,
+                                          value=float(defaults["rem_pct"]), step=0.1, key="rem_pct")
 
+        # Inputs
+        with colA:
+            ogtt_2h = st.number_input(HELP["ogtt_2h"], min_value=0.0, value=float(defaults["ogtt_2h"]), step=1.0, key="ogtt_2h")
+            apob    = st.number_input(HELP["apob"],    min_value=0.0, value=float(defaults["apob"]),    step=1.0, key="apob")
+            vo2max  = st.number_input(HELP["vo2max"],  min_value=0.0, value=float(defaults["vo2max"]),  step=0.1, key="vo2max")
+            crp     = st.number_input(HEL_
